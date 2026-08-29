@@ -1,832 +1,921 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<title>Registro de Campo</title>
-<link rel="manifest" id="rc-manifest">
-<style>
-  :root{
-    --bg:#F7F3EC; --card:#FFFDF9; --border:#E7DFCF; --border2:#EFE8DA;
-    --ink:#2B2620; --ink2:#3D3229; --muted:#8A8072; --label:#6B6156;
-    --green:#3F5B37; --green-bg:#3F5B3714; --clay:#B5533C; --clay-bg:#B5533C14;
-    --mango:#E2883D; --mango2:#C9622E; --avo:#5B7F3A; --chumbo:#B23A63; --neutral:#6B6156;
-  }
-  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
-  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
-  #app{min-height:100vh;display:flex;flex-direction:column;max-width:560px;margin:0 auto;}
-  .header{position:sticky;top:0;z-index:10;background:var(--green);padding:16px 16px 0;}
-  .header-top{display:flex;align-items:center;justify-content:space-between;color:#fff;}
-  .header-title{display:flex;align-items:center;gap:8px;font-weight:800;font-size:18px;}
-  .header-sub{color:#C9D6C0;font-size:11px;margin-top:2px;}
-  .gear-btn{background:#ffffff22;border:none;border-radius:999px;padding:8px;color:#fff;cursor:pointer;}
-  .year-row{display:flex;align-items:center;gap:8px;padding:10px 0;}
-  .year-btn{background:#ffffff22;border:none;border-radius:999px;padding:8px 10px;color:#fff;cursor:pointer;font-size:16px;}
-  .year-btn:disabled{opacity:.3;}
-  .year-label{flex:1;text-align:center;color:#fff;font-weight:800;font-size:16px;}
-  .hist-btn{width:100%;padding:8px;border-radius:8px;font-size:12px;font-weight:800;border:1px solid #ffffff40;
-    background:#ffffff1A;color:#fff;cursor:pointer;margin-bottom:12px;}
-  .hist-btn.active{background:#fff;color:var(--green);border-color:#fff;}
-  .content{flex:1;padding:16px;padding-bottom:100px;overflow-y:auto;}
-  .btn-add{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;
-    padding:13px;border:none;border-radius:14px;color:#fff;font-weight:800;font-size:15px;cursor:pointer;margin-bottom:16px;}
-  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:12px;}
-  .row-card{display:flex;align-items:stretch;gap:10px;background:var(--card);border:1px solid var(--border2);
-    border-radius:12px;padding:12px;margin-bottom:8px;}
-  .row-bar{width:5px;border-radius:4px;flex-shrink:0;}
-  .row-body{flex:1;min-width:0;}
-  .row-top{display:flex;align-items:center;justify-content:space-between;gap:8px;}
-  .chip{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap;}
-  .row-date{font-size:11px;color:var(--muted);}
-  .row-mid{font-size:14px;color:var(--ink2);margin-top:5px;}
-  .row-notes{font-size:12px;color:var(--muted);margin-top:2px;}
-  .row-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:6px;}
-  .row-pay{font-size:11px;font-weight:700;color:var(--muted);}
-  .row-amount{font-weight:800;font-size:15px;}
-  .del-btn{background:none;border:none;color:#e08b7a;padding:4px;cursor:pointer;align-self:flex-start;}
-  .empty{text-align:center;padding:40px 0;color:var(--muted);font-size:14px;font-weight:600;}
-  .field{margin-bottom:12px;}
-  .field-label{display:block;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;
-    color:var(--label);margin-bottom:4px;}
-  .field input, .field select{width:100%;border-radius:12px;border:1px solid #DDD5C7;background:#FFFDF9;
-    padding:10px 12px;font-size:15px;color:var(--ink);outline:none;}
-  .field input:focus, .field select:focus{border-color:var(--green);}
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-  .chip-select{display:flex;flex-wrap:wrap;gap:8px;}
-  .chip-opt{padding:7px 12px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid #DDD5C7;
-    background:#fff;color:var(--ink2);cursor:pointer;}
-  .cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-  .cat-opt{display:flex;align-items:center;gap:6px;padding:9px 10px;border-radius:12px;font-size:12px;
-    font-weight:700;border:1px solid #DDD5C7;background:#fff;color:var(--ink2);cursor:pointer;text-align:left;}
-  .form-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
-  .form-title{font-weight:800;font-size:15px;}
-  .x-btn{background:none;border:none;cursor:pointer;padding:4px;border-radius:999px;color:var(--ink2);font-size:18px;line-height:1;}
-  .importe-preview{display:flex;align-items:center;justify-content:space-between;padding:0 2px;margin-bottom:12px;}
-  .importe-preview .lbl{font-size:13px;font-weight:700;color:var(--label);}
-  .importe-preview .val{font-size:19px;font-weight:900;color:var(--green);}
-  .save-btn{width:100%;padding:13px;border:none;border-radius:12px;color:#fff;font-weight:800;font-size:15px;cursor:pointer;}
-  .save-btn:disabled{opacity:.4;}
-  .bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;
-    display:flex;justify-content:space-around;padding:8px 0;background:var(--card);border-top:1px solid var(--border);z-index:20;}
-  .nav-btn{display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;
-    padding:6px 16px;cursor:pointer;font-size:10px;font-weight:800;}
-  .nav-icon{font-size:19px;line-height:1;}
-  .summary-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;}
-  .sum-box{border-radius:12px;padding:10px;}
-  .sum-box .k{font-size:10px;font-weight:800;display:flex;align-items:center;gap:4px;}
-  .sum-box .v{font-size:15px;font-weight:900;margin-top:4px;}
-  .breakdown-item{margin-bottom:10px;}
-  .breakdown-top{display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;}
-  .bar-track{height:6px;border-radius:4px;background:#EFE8DA;}
-  .bar-fill{height:6px;border-radius:4px;}
-  .section-label{font-size:11px;font-weight:800;color:var(--label);margin-bottom:10px;letter-spacing:.03em;}
-  .error-banner{padding:8px 12px;border-radius:10px;font-size:12px;font-weight:700;background:var(--clay-bg);color:var(--clay);margin-bottom:12px;}
-  .status-banner{padding:10px 12px;border-radius:10px;font-size:12px;background:var(--green-bg);color:var(--green);margin-bottom:12px;font-weight:600;}
-  .settings-row{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
-  .settings-btn{padding:11px;border-radius:12px;border:1px solid var(--border);background:#fff;font-weight:700;font-size:13px;cursor:pointer;color:var(--ink2);}
-  .settings-btn.primary{background:var(--green);color:#fff;border:none;}
-  .settings-btn.danger{color:var(--clay);}
-  .help-text{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px;}
-  .drive-status{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;font-size:12px;font-weight:700;margin-bottom:12px;}
-  .dot{width:8px;height:8px;border-radius:999px;flex-shrink:0;}
-  a{color:var(--green);}
-</style>
-</head>
-<body>
-<div id="app"></div>
-
-<script src="https://accounts.google.com/gsi/client" async defer></script>
-<script>
-(function(){
-  "use strict";
-
-  // ---------------- Constants ----------------
-  const START_YEAR = 2020;
-  const CURRENT_YEAR = new Date().getFullYear();
-  const DRIVE_FILE_NAME = "registro-campo-datos.json";
-  const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
-
-  const PRODUCTS = [
-    {id:"mango_tommy", label:"Mango Tommy", color:"#E2883D"},
-    {id:"mango_osteen", label:"Mango Osteen", color:"#C9622E"},
-    {id:"aguacate", label:"Aguacate", color:"#5B7F3A"},
-    {id:"higo_chumbo", label:"Higo Chumbo", color:"#B23A63"},
-    {id:"otro", label:"Otro producto…", color:"#6B6156"}
-  ];
-  const CATEGORIES = [
-    {id:"combustible", label:"Combustible", color:"#4A5A6B", icon:"⛽"},
-    {id:"seguros", label:"Seguros", color:"#3F5B37", icon:"🛡️"},
-    {id:"abonos", label:"Abonos / Fertilizantes", color:"#7A9B57", icon:"🌱"},
-    {id:"fitosanitarios", label:"Fitosanitarios", color:"#3E7CB1", icon:"💧"},
-    {id:"maquinaria", label:"Maquinaria / Reparaciones", color:"#8A6E4B", icon:"🔧"},
-    {id:"mano_obra", label:"Mano de obra", color:"#B5533C", icon:"👥"},
-    {id:"agua_riego", label:"Agua / Riego", color:"#2F8FA6", icon:"🚿"},
-    {id:"otros", label:"Otros", color:"#6B6156", icon:"⋯"}
-  ];
-  const PAYMENTS = ["Efectivo","Cheque","Transferencia","Otro"];
-
-  const productMeta = id => PRODUCTS.find(p=>p.id===id) || {label:id, color:"#6B6156"};
-  const catMeta = id => CATEGORIES.find(c=>c.id===id) || {label:"Otros", color:"#6B6156", icon:"⋯"};
-  const eur = n => (Number(n)||0).toLocaleString("es-ES",{style:"currency",currency:"EUR"});
-  const uid = () => (crypto?.randomUUID && crypto.randomUUID()) || (Date.now()+"-"+Math.random().toString(36).slice(2,9));
-  const todayISO = () => new Date().toISOString().slice(0,10);
-  const esc = s => (s||"").replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
-
-  // ---------------- State ----------------
-  let state = {
-    ventas: JSON.parse(localStorage.getItem("rc_ventas") || "[]"),
-    gastos: JSON.parse(localStorage.getItem("rc_gastos") || "[]"),
-    year: CURRENT_YEAR,
-    showAll: false,
-    tab: "ventas", // ventas | gastos | resumen
-    settingsOpen: false,
-    formOpen: null, // 'venta' | 'gasto' | null
-    clientId: localStorage.getItem("rc_client_id") || "",
-    driveFileId: localStorage.getItem("rc_drive_file_id") || null,
-    driveToken: null,
-    driveLastSync: localStorage.getItem("rc_drive_last_sync") || null,
-    error: ""
-  };
-
-  function saveLocal(){
-    localStorage.setItem("rc_ventas", JSON.stringify(state.ventas));
-    localStorage.setItem("rc_gastos", JSON.stringify(state.gastos));
-  }
-
-  // ---------------- Google Drive ----------------
-  let tokenClient = null;
-
-  function initTokenClient(){
-    if(!window.google || !state.clientId) return;
-    tokenClient = google.accounts.oauth2.initTokenClient({
-      client_id: state.clientId,
-      scope: DRIVE_SCOPE,
-      callback: async (resp) => {
-        if(resp.error){ state.error = "No se pudo conectar con Google Drive."; renderAll(); return; }
-        state.driveToken = resp.access_token;
-        state.error = "";
-        renderAll();
-        await afterDriveConnected();
-      }
-    });
-  }
-
-  function connectDrive(){
-    if(!state.clientId){
-      state.error = "Primero pega tu ID de cliente de Google en Ajustes.";
-      renderAll();
-      return;
+{
+  "ventas": [
+    {
+      "id": "68bulh1tqf",
+      "fecha": "2020-07-25",
+      "productoId": "otro",
+      "productoLabel": "Uva",
+      "kg": null,
+      "precioKg": null,
+      "importeManual": 300.0,
+      "comprador": "verdeo",
+      "formaPago": "Efectivo",
+      "notas": "Importado de Gastos Diarios 3 (sin detalle de kg/precio)"
+    },
+    {
+      "id": "tru1edratq",
+      "fecha": "2020-11-19",
+      "productoId": "otro",
+      "productoLabel": "Mango",
+      "kg": null,
+      "precioKg": null,
+      "importeManual": 140.0,
+      "comprador": "bomberos",
+      "formaPago": "Efectivo",
+      "notas": "Importado de Gastos Diarios 3 (sin detalle de kg/precio)"
+    },
+    {
+      "id": "53bdx3fe0p",
+      "fecha": "2020-12-23",
+      "productoId": "otro",
+      "productoLabel": "Otro",
+      "kg": null,
+      "precioKg": null,
+      "importeManual": 346.0,
+      "comprador": "Mercado mayorista",
+      "formaPago": "Efectivo",
+      "notas": "Importado de Gastos Diarios 3 (sin detalle de kg/precio)"
+    },
+    {
+      "id": "7ozri8lozr",
+      "fecha": "2021-02-15",
+      "productoId": "otro",
+      "productoLabel": "Mango",
+      "kg": null,
+      "precioKg": null,
+      "importeManual": 1230.0,
+      "comprador": "millenium",
+      "formaPago": "Efectivo",
+      "notas": "Importado de Gastos Diarios 3 (sin detalle de kg/precio)"
+    },
+    {
+      "id": "vfwou5ik78",
+      "fecha": "2021-03-26",
+      "productoId": "aguacate",
+      "productoLabel": "Aguacate",
+      "kg": null,
+      "precioKg": null,
+      "importeManual": 622.0,
+      "comprador": "Milenium",
+      "formaPago": "Efectivo",
+      "notas": "Importado de Gastos Diarios 3 (sin detalle de kg/precio)"
+    },
+    {
+      "id": "h92typ0jbw",
+      "fecha": "2021-09-09",
+      "productoId": "otro",
+      "productoLabel": "Uva",
+      "kg": null,
+      "precioKg": null,
+      "importeManual": 200.0,
+      "comprador": "para vino Torrox",
+      "formaPago": "Efectivo",
+      "notas": "Importado de Gastos Diarios 3 (sin detalle de kg/precio)"
+    },
+    {
+      "id": "nqo6yqh89u",
+      "fecha": "2021-09-25",
+      "productoId": "otro",
+      "productoLabel": "Mango",
+      "kg": null,
+      "precioKg": null,
+      "importeManual": 70.0,
+      "comprador": "bomberos",
+      "formaPago": "Efectivo",
+      "notas": "Importado de Gastos Diarios 3 (sin detalle de kg/precio)"
+    },
+    {
+      "id": "2iw2q4cl37",
+      "fecha": "2021-10-11",
+      "productoId": "otro",
+      "productoLabel": "Mango",
+      "kg": null,
+      "precioKg": null,
+      "importeManual": 60.0,
+      "comprador": "bomberos",
+      "formaPago": "Efectivo",
+      "notas": "Importado de Gastos Diarios 3 (sin detalle de kg/precio)"
+    },
+    {
+      "id": "p0dpg5bwb0",
+      "fecha": "2021-10-19",
+      "productoId": "otro",
+      "productoLabel": "Mango",
+      "kg": null,
+      "precioKg": null,
+      "importeManual": 20.0,
+      "comprador": "bomberos",
+      "formaPago": "Efectivo",
+      "notas": "Importado de Gastos Diarios 3 (sin detalle de kg/precio)"
+    },
+    {
+      "id": "1ijnglfsfa",
+      "fecha": "2021-10-21",
+      "productoId": "otro",
+      "productoLabel": "Mango",
+      "kg": null,
+      "precioKg": null,
+      "importeManual": 40.0,
+      "comprador": "bomberos",
+      "formaPago": "Efectivo",
+      "notas": "Importado de Gastos Diarios 3 (sin detalle de kg/precio)"
+    },
+    {
+      "id": "l03yjadkc3",
+      "fecha": "2021-10-21",
+      "productoId": "otro",
+      "productoLabel": "Mango",
+      "kg": null,
+      "precioKg": null,
+      "importeManual": 20.0,
+      "comprador": "filipa",
+      "formaPago": "Efectivo",
+      "notas": "Importado de Gastos Diarios 3 (sin detalle de kg/precio)"
+    },
+    {
+      "id": "anejdate10",
+      "fecha": "2021-12-16",
+      "productoId": "otro",
+      "productoLabel": "Otro",
+      "kg": null,
+      "precioKg": null,
+      "importeManual": 1083.0,
+      "comprador": "Mercado mayorista",
+      "formaPago": "Efectivo",
+      "notas": "Importado de Gastos Diarios 3 (sin detalle de kg/precio)"
+    },
+    {
+      "id": "obew4icfvm",
+      "fecha": "2022-01-13",
+      "productoId": "otro",
+      "productoLabel": "Mango",
+      "kg": null,
+      "precioKg": null,
+      "importeManual": 5493.0,
+      "comprador": "Milenium",
+      "formaPago": "Efectivo",
+      "notas": "Importado de Gastos Diarios 3 (sin detalle de kg/precio)"
+    },
+    {
+      "id": "xsvtxa4z2p",
+      "fecha": "2022-02-21",
+      "productoId": "otro",
+      "productoLabel": "Otro",
+      "kg": null,
+      "precioKg": null,
+      "importeManual": 2209.0,
+      "comprador": "",
+      "formaPago": "Efectivo",
+      "notas": "Importado de Gastos Diarios 3 (sin detalle de kg/precio)"
+    },
+    {
+      "id": "9r15r44tch",
+      "fecha": "2022-11-14",
+      "productoId": "otro",
+      "productoLabel": "Mango",
+      "kg": null,
+      "precioKg": null,
+      "importeManual": 2480.0,
+      "comprador": "",
+      "formaPago": "Efectivo",
+      "notas": "Importado de Gastos Diarios 3 (sin detalle de kg/precio)"
     }
-    if(!tokenClient) initTokenClient();
-    if(tokenClient) tokenClient.requestAccessToken({prompt: state.driveToken ? "" : "consent"});
-  }
-
-  function disconnectDrive(){
-    if(state.driveToken){
-      google.accounts.oauth2.revoke(state.driveToken, ()=>{});
+  ],
+  "gastos": [
+    {
+      "id": "9wsnyya0r6",
+      "fecha": "2019-11-08",
+      "categoriaId": "combustible",
+      "importe": 30.0,
+      "descripcion": "Repostaje coche (importado)"
+    },
+    {
+      "id": "lj4sbrgrka",
+      "fecha": "2019-12-07",
+      "categoriaId": "combustible",
+      "importe": 30.0,
+      "descripcion": "Repostaje (importado)"
+    },
+    {
+      "id": "0i07yl552w",
+      "fecha": "2020-01-04",
+      "categoriaId": "combustible",
+      "importe": 30.0,
+      "descripcion": " (importado)"
+    },
+    {
+      "id": "a5jprzdldc",
+      "fecha": "2020-01-04",
+      "categoriaId": "combustible",
+      "importe": 30.0,
+      "descripcion": "Repostaje (importado)"
+    },
+    {
+      "id": "t0xsnxe1j4",
+      "fecha": "2020-02-01",
+      "categoriaId": "mano_obra",
+      "importe": 250.0,
+      "descripcion": "Jornales podar (importado)"
+    },
+    {
+      "id": "b4s7018yxz",
+      "fecha": "2020-02-01",
+      "categoriaId": "maquinaria",
+      "importe": 45.0,
+      "descripcion": "Mochila sulfatar (importado)"
+    },
+    {
+      "id": "6azus79d32",
+      "fecha": "2020-02-01",
+      "categoriaId": "maquinaria",
+      "importe": 13.0,
+      "descripcion": "Tijeras podar (importado)"
+    },
+    {
+      "id": "iylmmx5xb4",
+      "fecha": "2020-02-01",
+      "categoriaId": "agua_riego",
+      "importe": 25.0,
+      "descripcion": "Goteros autocompenzantes (importado)"
+    },
+    {
+      "id": "et45blk7hd",
+      "fecha": "2020-02-01",
+      "categoriaId": "agua_riego",
+      "importe": 4.25,
+      "descripcion": "Manguito reducion 63-50 mm (importado)"
+    },
+    {
+      "id": "970lcbw63v",
+      "fecha": "2020-02-01",
+      "categoriaId": "combustible",
+      "importe": 30.0,
+      "descripcion": "Repostaje (importado)"
+    },
+    {
+      "id": "nje2ekitul",
+      "fecha": "2020-02-04",
+      "categoriaId": "fitosanitarios",
+      "importe": 22.0,
+      "descripcion": "Fungicida herbolex 5ltrs. (importado)"
+    },
+    {
+      "id": "2m2raj9rlk",
+      "fecha": "2020-03-06",
+      "categoriaId": "agua_riego",
+      "importe": 77.0,
+      "descripcion": "Varios para mejora de goteo (importado)"
+    },
+    {
+      "id": "bdtqh8vuht",
+      "fecha": "2020-03-07",
+      "categoriaId": "combustible",
+      "importe": 30.0,
+      "descripcion": "Repostaje (importado)"
+    },
+    {
+      "id": "xuo7e0paqb",
+      "fecha": "2020-03-13",
+      "categoriaId": "fitosanitarios",
+      "importe": 237.0,
+      "descripcion": "Abonos y fungicida mango (importado)"
+    },
+    {
+      "id": "l0mtm0o7n3",
+      "fecha": "2020-04-02",
+      "categoriaId": "maquinaria",
+      "importe": 125.0,
+      "descripcion": "Desbrozadora más aperos (importado)"
+    },
+    {
+      "id": "9gimegplrb",
+      "fecha": "2020-04-04",
+      "categoriaId": "combustible",
+      "importe": 40.0,
+      "descripcion": "Repostaje (importado)"
+    },
+    {
+      "id": "egx15fzjio",
+      "fecha": "2020-04-07",
+      "categoriaId": "fitosanitarios",
+      "importe": 25.0,
+      "descripcion": "Azufre para la viñas (importado)"
+    },
+    {
+      "id": "9nozdcexde",
+      "fecha": "2020-04-07",
+      "categoriaId": "agua_riego",
+      "importe": 80.0,
+      "descripcion": "Venturi + goteros (importado)"
+    },
+    {
+      "id": "jgwwcop97r",
+      "fecha": "2020-04-22",
+      "categoriaId": "fitosanitarios",
+      "importe": 38.5,
+      "descripcion": "Ridomil golf + azufre mojable (importado)"
+    },
+    {
+      "id": "4nc83bk8re",
+      "fecha": "2020-05-02",
+      "categoriaId": "combustible",
+      "importe": 40.0,
+      "descripcion": "Repostaje (importado)"
+    },
+    {
+      "id": "2tjwk80zyx",
+      "fecha": "2020-05-04",
+      "categoriaId": "combustible",
+      "importe": 60.0,
+      "descripcion": "Cabezal, hilo, cebador y gasolina (importado)"
+    },
+    {
+      "id": "atcuwzkpgn",
+      "fecha": "2020-05-07",
+      "categoriaId": "combustible",
+      "importe": 30.0,
+      "descripcion": "Herbolex, gasolina (importado)"
+    },
+    {
+      "id": "im9zkpvumx",
+      "fecha": "2020-06-06",
+      "categoriaId": "otros",
+      "importe": 67.0,
+      "descripcion": "Goma 32 + llavas de corte balsa (importado)"
+    },
+    {
+      "id": "t9bhky2dog",
+      "fecha": "2020-06-06",
+      "categoriaId": "maquinaria",
+      "importe": 250.0,
+      "descripcion": "Desbrozadora basic (importado)"
+    },
+    {
+      "id": "uc8n3745d5",
+      "fecha": "2020-06-06",
+      "categoriaId": "combustible",
+      "importe": 50.0,
+      "descripcion": "Repostaje (importado)"
+    },
+    {
+      "id": "rt0cdlim3c",
+      "fecha": "2020-06-10",
+      "categoriaId": "agua_riego",
+      "importe": 11.5,
+      "descripcion": "50 goteros (importado)"
+    },
+    {
+      "id": "dta5zpp17c",
+      "fecha": "2020-06-15",
+      "categoriaId": "abonos",
+      "importe": 36.0,
+      "descripcion": "Abono 20-20-20 (importado)"
+    },
+    {
+      "id": "ff8yozjopo",
+      "fecha": "2020-07-01",
+      "categoriaId": "agua_riego",
+      "importe": 67.0,
+      "descripcion": "100 goteros 100 tapones 10 Y y 2 llaves de apriete (importado)"
+    },
+    {
+      "id": "kjkgvzd4cn",
+      "fecha": "2020-07-04",
+      "categoriaId": "combustible",
+      "importe": 50.0,
+      "descripcion": "Repostaje (importado)"
+    },
+    {
+      "id": "9jopn9f81l",
+      "fecha": "2020-07-22",
+      "categoriaId": "abonos",
+      "importe": 35.0,
+      "descripcion": "Abono 20-20-20 (importado)"
+    },
+    {
+      "id": "ksvpvrq9hx",
+      "fecha": "2020-08-01",
+      "categoriaId": "combustible",
+      "importe": 50.0,
+      "descripcion": "Repostaje (importado)"
+    },
+    {
+      "id": "c5sukicc8r",
+      "fecha": "2020-09-05",
+      "categoriaId": "combustible",
+      "importe": 50.0,
+      "descripcion": "Repostaje (importado)"
+    },
+    {
+      "id": "q5cdvy0g8j",
+      "fecha": "2020-10-03",
+      "categoriaId": "combustible",
+      "importe": 40.0,
+      "descripcion": "Repostaje (importado)"
+    },
+    {
+      "id": "7kfpozgmui",
+      "fecha": "2020-11-07",
+      "categoriaId": "combustible",
+      "importe": 30.0,
+      "descripcion": "Repostaje (importado)"
+    },
+    {
+      "id": "83ee183xj5",
+      "fecha": "2020-11-19",
+      "categoriaId": "fitosanitarios",
+      "importe": 167.75,
+      "descripcion": "Herbolex 20l, mas rompesemillas (importado)"
+    },
+    {
+      "id": "s2n2i6o8qa",
+      "fecha": "2020-12-05",
+      "categoriaId": "fitosanitarios",
+      "importe": 20.0,
+      "descripcion": "Sulfato cobre (importado)"
+    },
+    {
+      "id": "0sgy3v7r34",
+      "fecha": "2020-12-05",
+      "categoriaId": "maquinaria",
+      "importe": 370.0,
+      "descripcion": "Motobomba sulfatadora (importado)"
+    },
+    {
+      "id": "8ikparr0ku",
+      "fecha": "2020-12-05",
+      "categoriaId": "combustible",
+      "importe": 30.0,
+      "descripcion": "Repostaje (importado)"
+    },
+    {
+      "id": "cwvxq9y3nq",
+      "fecha": "2020-12-10",
+      "categoriaId": "agua_riego",
+      "importe": 70.0,
+      "descripcion": "Arreglo motosierra + llaves de paso y bridas (importado)"
+    },
+    {
+      "id": "g3xcprffro",
+      "fecha": "2020-12-10",
+      "categoriaId": "otros",
+      "importe": 45.0,
+      "descripcion": "Fontanería bidones sulfatar (importado)"
+    },
+    {
+      "id": "x8qp46qkw8",
+      "fecha": "2021-01-02",
+      "categoriaId": "combustible",
+      "importe": 30.0,
+      "descripcion": "Repostaje (importado)"
+    },
+    {
+      "id": "dj4ravhmo1",
+      "fecha": "2021-02-06",
+      "categoriaId": "combustible",
+      "importe": 30.0,
+      "descripcion": "Repostaje (importado)"
+    },
+    {
+      "id": "7z1jxi8ue9",
+      "fecha": "2021-02-15",
+      "categoriaId": "fitosanitarios",
+      "importe": 36.0,
+      "descripcion": "Sulfato cobre+ pegamento (importado)"
+    },
+    {
+      "id": "q4b7o7rhi0",
+      "fecha": "2021-02-15",
+      "categoriaId": "agua_riego",
+      "importe": 32.0,
+      "descripcion": "Enchufe rápidos   gardena (importado)"
+    },
+    {
+      "id": "kvkzgqrl06",
+      "fecha": "2021-02-15",
+      "categoriaId": "agua_riego",
+      "importe": 33.0,
+      "descripcion": "Lanza cuádruple delantera (importado)"
+    },
+    {
+      "id": "s9s0jprjz1",
+      "fecha": "2021-02-18",
+      "categoriaId": "agua_riego",
+      "importe": 35.0,
+      "descripcion": "Pistola lanza para sulfatar (importado)"
+    },
+    {
+      "id": "o3mrhz01md",
+      "fecha": "2021-02-18",
+      "categoriaId": "agua_riego",
+      "importe": 24.0,
+      "descripcion": "Cesta recoger aguacate (importado)"
+    },
+    {
+      "id": "w6r4i12aay",
+      "fecha": "2021-03-06",
+      "categoriaId": "combustible",
+      "importe": 30.0,
+      "descripcion": "Repostaje (importado)"
+    },
+    {
+      "id": "fxuhmma2tm",
+      "fecha": "2021-03-15",
+      "categoriaId": "agua_riego",
+      "importe": 28.0,
+      "descripcion": "Collarines 63-50 tes y enlaces 1/5 (importado)"
+    },
+    {
+      "id": "nqt5ea8ieh",
+      "fecha": "2021-03-19",
+      "categoriaId": "abonos",
+      "importe": 120.0,
+      "descripcion": "Dorado + muligan + quelato hierro (importado)"
+    },
+    {
+      "id": "ym36zxls9h",
+      "fecha": "2021-04-03",
+      "categoriaId": "combustible",
+      "importe": 30.0,
+      "descripcion": "Repostaje (importado)"
+    },
+    {
+      "id": "69527bxqvp",
+      "fecha": "2021-04-20",
+      "categoriaId": "fitosanitarios",
+      "importe": 190.0,
+      "descripcion": "Boro, zinc, naturgrean, mildiu (importado)"
+    },
+    {
+      "id": "hqg1v2lhv7",
+      "fecha": "2021-05-01",
+      "categoriaId": "combustible",
+      "importe": 40.0,
+      "descripcion": "Repostaje (importado)"
+    },
+    {
+      "id": "0siwtyz9jd",
+      "fecha": "2021-06-05",
+      "categoriaId": "combustible",
+      "importe": 50.0,
+      "descripcion": "Repostaje (importado)"
+    },
+    {
+      "id": "tzi5yp076f",
+      "fecha": "2021-06-10",
+      "categoriaId": "abonos",
+      "importe": 30.0,
+      "descripcion": "Naturgreen (importado)"
+    },
+    {
+      "id": "xmh8i1a7yg",
+      "fecha": "2021-07-03",
+      "categoriaId": "combustible",
+      "importe": 50.0,
+      "descripcion": "Repostaje (importado)"
+    },
+    {
+      "id": "fwbas6tb20",
+      "fecha": "2021-07-07",
+      "categoriaId": "abonos",
+      "importe": 70.0,
+      "descripcion": "Abonó erocrib x 2 (importado)"
+    },
+    {
+      "id": "k8i8pvjzlg",
+      "fecha": "2021-07-10",
+      "categoriaId": "mano_obra",
+      "importe": 90.0,
+      "descripcion": "Limpiar carriles viñas (importado)"
+    },
+    {
+      "id": "ac9y86y2id",
+      "fecha": "2021-07-12",
+      "categoriaId": "agua_riego",
+      "importe": 30.0,
+      "descripcion": "X2 manguito 40mm + 5lts de aceite desbrozadora (importado)"
+    },
+    {
+      "id": "yj7sy4qjd7",
+      "fecha": "2021-07-25",
+      "categoriaId": "agua_riego",
+      "importe": 70.0,
+      "descripcion": "X2 manguera 20mm x 100m x6atm más manguitos y llaves de paso (importado)"
+    },
+    {
+      "id": "9dd41nitgv",
+      "fecha": "2021-07-25",
+      "categoriaId": "mano_obra",
+      "importe": 80.0,
+      "descripcion": "Ingerta mango sesaccion (importado)"
+    },
+    {
+      "id": "3rb6e7g01d",
+      "fecha": "2021-08-07",
+      "categoriaId": "combustible",
+      "importe": 50.0,
+      "descripcion": "Repostaje (importado)"
+    },
+    {
+      "id": "fmn4szx0qp",
+      "fecha": "2021-09-04",
+      "categoriaId": "mano_obra",
+      "importe": 120.0,
+      "descripcion": "X2 jornales mangos (importado)"
+    },
+    {
+      "id": "wxik1xjdp8",
+      "fecha": "2021-09-04",
+      "categoriaId": "combustible",
+      "importe": 50.0,
+      "descripcion": "Repostaje (importado)"
+    },
+    {
+      "id": "7m1ekft0i7",
+      "fecha": "2021-09-30",
+      "categoriaId": "agua_riego",
+      "importe": 46.0,
+      "descripcion": "200 m goma de 20, enlace 1 pulgada y un enlace de 1 pulgada a goma (importado)"
+    },
+    {
+      "id": "pjdn7fc8q7",
+      "fecha": "2021-10-02",
+      "categoriaId": "combustible",
+      "importe": 40.0,
+      "descripcion": "Repostaje (importado)"
+    },
+    {
+      "id": "01sn4og6z9",
+      "fecha": "2021-10-08",
+      "categoriaId": "abonos",
+      "importe": 43.0,
+      "descripcion": "25 k de amoniaco y 25 de nitrato potásico (importado)"
+    },
+    {
+      "id": "nnl329kbzl",
+      "fecha": "2021-11-06",
+      "categoriaId": "combustible",
+      "importe": 30.0,
+      "descripcion": "Repostaje (importado)"
+    },
+    {
+      "id": "9mgy93dtwr",
+      "fecha": "2021-12-03",
+      "categoriaId": "fitosanitarios",
+      "importe": 23.0,
+      "descripcion": "Cobre + pegamento (importado)"
+    },
+    {
+      "id": "ys8tfncn46",
+      "fecha": "2021-12-04",
+      "categoriaId": "combustible",
+      "importe": 30.0,
+      "descripcion": "Repostaje (importado)"
+    },
+    {
+      "id": "a4zghqplx7",
+      "fecha": "2022-01-01",
+      "categoriaId": "combustible",
+      "importe": 30.0,
+      "descripcion": "Repostaje (importado)"
+    },
+    {
+      "id": "blfhvvg2y4",
+      "fecha": "2022-01-26",
+      "categoriaId": "fitosanitarios",
+      "importe": 320.0,
+      "descripcion": "Curso fitosanitario (importado)"
+    },
+    {
+      "id": "vzuc6ez3vu",
+      "fecha": "2022-02-05",
+      "categoriaId": "combustible",
+      "importe": 40.0,
+      "descripcion": "Repostaje (importado)"
+    },
+    {
+      "id": "gwflkuj9ny",
+      "fecha": "2022-03-05",
+      "categoriaId": "combustible",
+      "importe": 40.0,
+      "descripcion": "Repostaje (importado)"
+    },
+    {
+      "id": "sdd3bdwf9w",
+      "fecha": "2022-04-01",
+      "categoriaId": "abonos",
+      "importe": 70.0,
+      "descripcion": "Hierro + naturgreen 20l (importado)"
+    },
+    {
+      "id": "a2ldharkfo",
+      "fecha": "2022-04-02",
+      "categoriaId": "combustible",
+      "importe": 50.0,
+      "descripcion": "Repostaje (importado)"
+    },
+    {
+      "id": "nh2a08x62s",
+      "fecha": "2022-04-18",
+      "categoriaId": "abonos",
+      "importe": 83.0,
+      "descripcion": "Topa + naturgreen (importado)"
+    },
+    {
+      "id": "bxqfb6bgr4",
+      "fecha": "2022-04-20",
+      "categoriaId": "abonos",
+      "importe": 57.0,
+      "descripcion": "Pegamento + hierro (importado)"
+    },
+    {
+      "id": "866q1ax98y",
+      "fecha": "2022-05-07",
+      "categoriaId": "combustible",
+      "importe": 60.0,
+      "descripcion": "Repostaje (importado)"
+    },
+    {
+      "id": "grcyu530sz",
+      "fecha": "2022-05-26",
+      "categoriaId": "maquinaria",
+      "importe": 116.0,
+      "descripcion": "Relé TPM6+ sonda (importado)"
+    },
+    {
+      "id": "4alz42pckt",
+      "fecha": "2022-06-02",
+      "categoriaId": "agua_riego",
+      "importe": 100.0,
+      "descripcion": "X2 triple 20 (importado)"
+    },
+    {
+      "id": "8wxbz04fjt",
+      "fecha": "2022-06-07",
+      "categoriaId": "combustible",
+      "importe": 24.0,
+      "descripcion": "Manguito 63mm+ grifo bola+ depósito gasolina desbrozadora (importado)"
+    },
+    {
+      "id": "6acryn9x21",
+      "fecha": "2022-06-07",
+      "categoriaId": "combustible",
+      "importe": 30.0,
+      "descripcion": "Repostaje (importado)"
+    },
+    {
+      "id": "6c7gedejzb",
+      "fecha": "2022-06-16",
+      "categoriaId": "combustible",
+      "importe": 21.0,
+      "descripcion": "10 litros desbrozadora (importado)"
+    },
+    {
+      "id": "z75snry51f",
+      "fecha": "2022-06-17",
+      "categoriaId": "combustible",
+      "importe": 30.0,
+      "descripcion": "Suzuki (importado)"
+    },
+    {
+      "id": "kqkzt4h4hu",
+      "fecha": "2022-06-28",
+      "categoriaId": "agua_riego",
+      "importe": 22.0,
+      "descripcion": "Programador riego (importado)"
+    },
+    {
+      "id": "3tofpw8lyt",
+      "fecha": "2022-06-30",
+      "categoriaId": "combustible",
+      "importe": 30.0,
+      "descripcion": "Repostaje (importado)"
+    },
+    {
+      "id": "w54usf6yp2",
+      "fecha": "2022-07-15",
+      "categoriaId": "agua_riego",
+      "importe": 100.0,
+      "descripcion": "Bomba 160psi filtro 32mm llave paso 32mm (importado)"
+    },
+    {
+      "id": "gy0vrghrq8",
+      "fecha": "2022-07-15",
+      "categoriaId": "combustible",
+      "importe": 30.0,
+      "descripcion": "Repostaje (importado)"
+    },
+    {
+      "id": "cbjrmrpfle",
+      "fecha": "2022-07-29",
+      "categoriaId": "combustible",
+      "importe": 30.0,
+      "descripcion": "Repostaje (importado)"
+    },
+    {
+      "id": "hcc9rsh740",
+      "fecha": "2022-08-01",
+      "categoriaId": "maquinaria",
+      "importe": 25.0,
+      "descripcion": "Temporizador cuenta atrás+ caja (importado)"
+    },
+    {
+      "id": "zr2tjwy9h7",
+      "fecha": "2022-08-04",
+      "categoriaId": "agua_riego",
+      "importe": 45.0,
+      "descripcion": "Nivel de agua pozo + cable (importado)"
+    },
+    {
+      "id": "bwa392hzfm",
+      "fecha": "2022-08-05",
+      "categoriaId": "abonos",
+      "importe": 150.0,
+      "descripcion": "Naturgreen k50 40lt. (importado)"
+    },
+    {
+      "id": "ihqtxwnb56",
+      "fecha": "2022-09-02",
+      "categoriaId": "mano_obra",
+      "importe": 120.0,
+      "descripcion": "2 jornadas recogida mangos (importado)"
+    },
+    {
+      "id": "30hmn9notv",
+      "fecha": "2022-09-02",
+      "categoriaId": "otros",
+      "importe": 50.0,
+      "descripcion": "Porté mangos (camión) (importado)"
+    },
+    {
+      "id": "dz6ha5wumx",
+      "fecha": "2022-10-02",
+      "categoriaId": "combustible",
+      "importe": 30.0,
+      "descripcion": "Repostaje (importado)"
+    },
+    {
+      "id": "m9ecbkubml",
+      "fecha": "2022-10-25",
+      "categoriaId": "maquinaria",
+      "importe": 36.0,
+      "descripcion": "Válvula retención 32 + arnés desbrozadora (importado)"
+    },
+    {
+      "id": "h0pfqg7jcr",
+      "fecha": "2022-11-04",
+      "categoriaId": "agua_riego",
+      "importe": 54.0,
+      "descripcion": "Electroválvula 24v (importado)"
+    },
+    {
+      "id": "367dbozenm",
+      "fecha": "2022-11-04",
+      "categoriaId": "agua_riego",
+      "importe": 70.0,
+      "descripcion": "Centralita riego (importado)"
+    },
+    {
+      "id": "52wu8svlr9",
+      "fecha": "2022-11-05",
+      "categoriaId": "combustible",
+      "importe": 30.0,
+      "descripcion": "Repostaje (importado)"
+    },
+    {
+      "id": "1u4asfjwew",
+      "fecha": "2023-06-14",
+      "categoriaId": "abonos",
+      "importe": 102.0,
+      "descripcion": "Abono 20,20 y grifoche 5,l (importado)"
+    },
+    {
+      "id": "xehuo6wfsb",
+      "fecha": "2023-07-24",
+      "categoriaId": "agua_riego",
+      "importe": 20.0,
+      "descripcion": "Solenoide electroválvula (importado)"
+    },
+    {
+      "id": "3czfhq7cjc",
+      "fecha": "2023-07-27",
+      "categoriaId": "combustible",
+      "importe": 30.0,
+      "descripcion": "Reportajes (importado)"
+    },
+    {
+      "id": "y09zyus36w",
+      "fecha": "2023-07-28",
+      "categoriaId": "maquinaria",
+      "importe": 2020.0,
+      "descripcion": "Motobomba Honda completa (importado)"
+    },
+    {
+      "id": "x6do8kvpa2",
+      "fecha": "2023-08-04",
+      "categoriaId": "otros",
+      "importe": 1360.0,
+      "descripcion": "Permiso enganche luz (importado)"
     }
-    state.driveToken = null;
-    renderAll();
-  }
-
-  async function driveFetch(url, opts){
-    opts = opts || {};
-    opts.headers = Object.assign({}, opts.headers, {"Authorization":"Bearer "+state.driveToken});
-    const res = await fetch(url, opts);
-    if(!res.ok){
-      const txt = await res.text().catch(()=> "");
-      throw new Error("Drive error " + res.status + " " + txt);
-    }
-    return res;
-  }
-
-  async function driveFindFile(){
-    const q = encodeURIComponent(`name='${DRIVE_FILE_NAME}' and trashed=false`);
-    const res = await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&spaces=drive&fields=files(id,name,modifiedTime)`);
-    const data = await res.json();
-    return (data.files && data.files[0]) || null;
-  }
-
-  async function driveCreateFile(contentObj){
-    const boundary = "rc_bound_314159";
-    const metadata = {name: DRIVE_FILE_NAME, mimeType: "application/json"};
-    const body =
-      `--${boundary}\r\nContent-Type: application/json\r\n\r\n${JSON.stringify(metadata)}\r\n` +
-      `--${boundary}\r\nContent-Type: application/json\r\n\r\n${JSON.stringify(contentObj)}\r\n` +
-      `--${boundary}--`;
-    const res = await driveFetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id", {
-      method:"POST",
-      headers:{"Content-Type":`multipart/related; boundary=${boundary}`},
-      body
-    });
-    const data = await res.json();
-    return data.id;
-  }
-
-  async function driveUpdateFile(fileId, contentObj){
-    await driveFetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
-      method:"PATCH",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify(contentObj)
-    });
-  }
-
-  async function driveDownloadFile(fileId){
-    const res = await driveFetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`);
-    return res.json();
-  }
-
-  let syncTimer = null;
-  function scheduleSync(){
-    if(!state.driveToken) return;
-    if(syncTimer) clearTimeout(syncTimer);
-    syncTimer = setTimeout(syncToDrive, 800);
-  }
-
-  async function syncToDrive(){
-    if(!state.driveToken) return;
-    try{
-      const payload = {ventas: state.ventas, gastos: state.gastos, updatedAt: new Date().toISOString()};
-      if(!state.driveFileId){
-        const existing = await driveFindFile();
-        if(existing) state.driveFileId = existing.id;
-      }
-      if(state.driveFileId){
-        await driveUpdateFile(state.driveFileId, payload);
-      } else {
-        const id = await driveCreateFile(payload);
-        state.driveFileId = id;
-        localStorage.setItem("rc_drive_file_id", id);
-      }
-      state.driveLastSync = new Date().toISOString();
-      localStorage.setItem("rc_drive_last_sync", state.driveLastSync);
-      state.error = "";
-    }catch(e){
-      state.error = "No se pudo sincronizar con Drive. Se ha guardado en el móvil.";
-    }
-    renderSettingsIfOpen();
-  }
-
-  async function afterDriveConnected(){
-    try{
-      const existing = await driveFindFile();
-      if(existing){
-        state.driveFileId = existing.id;
-        localStorage.setItem("rc_drive_file_id", existing.id);
-        const remote = await driveDownloadFile(existing.id);
-        const localEmpty = state.ventas.length===0 && state.gastos.length===0;
-        const remoteHasData = (remote.ventas && remote.ventas.length) || (remote.gastos && remote.gastos.length);
-        if(localEmpty && remoteHasData){
-          state.ventas = remote.ventas || [];
-          state.gastos = remote.gastos || [];
-          saveLocal();
-        }
-      } else {
-        await syncToDrive();
-      }
-    }catch(e){
-      state.error = "Conectado, pero no se pudo comprobar la copia en Drive.";
-    }
-    renderAll();
-  }
-
-  async function loadFromDriveManual(){
-    if(!state.driveToken){ connectDrive(); return; }
-    try{
-      if(!state.driveFileId){
-        const existing = await driveFindFile();
-        if(!existing){ state.error = "No hay ninguna copia en Drive todavía."; renderSettingsIfOpen(); return; }
-        state.driveFileId = existing.id;
-        localStorage.setItem("rc_drive_file_id", existing.id);
-      }
-      const remote = await driveDownloadFile(state.driveFileId);
-      state.ventas = remote.ventas || [];
-      state.gastos = remote.gastos || [];
-      saveLocal();
-      state.error = "";
-      renderAll();
-    }catch(e){
-      state.error = "No se pudo cargar la copia de Drive.";
-      renderSettingsIfOpen();
-    }
-  }
-
-  // ---------------- Mutations ----------------
-  function addVenta(v){
-    state.ventas.unshift(v);
-    saveLocal();
-    state.formOpen = null;
-    renderAll();
-    scheduleSync();
-  }
-  function addGasto(g){
-    state.gastos.unshift(g);
-    saveLocal();
-    state.formOpen = null;
-    renderAll();
-    scheduleSync();
-  }
-  function deleteVenta(id){
-    state.ventas = state.ventas.filter(v=>v.id!==id);
-    saveLocal();
-    renderAll();
-    scheduleSync();
-  }
-  function deleteGasto(id){
-    state.gastos = state.gastos.filter(g=>g.id!==id);
-    saveLocal();
-    renderAll();
-    scheduleSync();
-  }
-
-  // ---------------- Filters ----------------
-  function filteredVentas(){
-    const arr = state.showAll ? state.ventas.slice() : state.ventas.filter(v=>v.fecha.slice(0,4)===String(state.year));
-    return arr.sort((a,b)=> b.fecha.localeCompare(a.fecha));
-  }
-  function filteredGastos(){
-    const arr = state.showAll ? state.gastos.slice() : state.gastos.filter(g=>g.fecha.slice(0,4)===String(state.year));
-    return arr.sort((a,b)=> b.fecha.localeCompare(a.fecha));
-  }
-
-  // ---------------- Render ----------------
-  const app = document.getElementById("app");
-
-  function renderAll(){
-    app.innerHTML = "";
-    app.appendChild(buildHeader());
-    const content = document.createElement("div");
-    content.className = "content";
-    content.id = "content";
-    app.appendChild(content);
-    app.appendChild(buildBottomNav());
-    renderContent();
-  }
-
-  function renderContent(){
-    const content = document.getElementById("content");
-    content.innerHTML = "";
-    if(state.error){
-      const b = document.createElement("div");
-      b.className = "error-banner";
-      b.textContent = state.error;
-      content.appendChild(b);
-    }
-    if(state.settingsOpen){
-      content.appendChild(buildSettings());
-      return;
-    }
-    if(state.tab === "ventas") content.appendChild(buildVentasTab());
-    else if(state.tab === "gastos") content.appendChild(buildGastosTab());
-    else content.appendChild(buildResumenTab());
-  }
-
-  function renderSettingsIfOpen(){
-    if(state.settingsOpen) renderContent();
-  }
-
-  function buildHeader(){
-    const h = document.createElement("div");
-    h.className = "header";
-    h.innerHTML = `
-      <div class="header-top">
-        <div>
-          <div class="header-title">📋 Registro de Campo</div>
-          <div class="header-sub">Ventas y gastos por campaña · desde ${START_YEAR}</div>
-        </div>
-        <button class="gear-btn" id="gear-btn">⚙️</button>
-      </div>
-      <div class="year-row">
-        <button class="year-btn" id="year-prev" ${state.showAll?"disabled":""}>‹</button>
-        <div class="year-label">${state.showAll ? "Histórico completo" : "Campaña " + state.year}</div>
-        <button class="year-btn" id="year-next" ${state.showAll?"disabled":""}>›</button>
-      </div>
-      <button class="hist-btn ${state.showAll?"active":""}" id="hist-toggle">
-        ${state.showAll ? "Volver a vista por campaña" : "Ver histórico completo (2020–hoy)"}
-      </button>
-    `;
-    h.querySelector("#gear-btn").onclick = () => { state.settingsOpen = !state.settingsOpen; renderContent(); };
-    h.querySelector("#year-prev").onclick = () => { state.year = Math.max(START_YEAR, state.year-1); renderContent(); };
-    h.querySelector("#year-next").onclick = () => { state.year = Math.min(CURRENT_YEAR+1, state.year+1); renderContent(); };
-    h.querySelector("#hist-toggle").onclick = () => { state.showAll = !state.showAll; renderContent(); };
-    return h;
-  }
-
-  function buildBottomNav(){
-    const nav = document.createElement("div");
-    nav.className = "bottom-nav";
-    const tabs = [["ventas","📦","Ventas"],["gastos","🧾","Gastos"],["resumen","📊","Resumen"]];
-    tabs.forEach(([id,icon,label])=>{
-      const active = state.tab===id && !state.settingsOpen;
-      const b = document.createElement("button");
-      b.className = "nav-btn";
-      b.style.color = active ? "var(--green)" : "#B0A896";
-      b.innerHTML = `<div class="nav-icon">${icon}</div><div>${label}</div>`;
-      b.onclick = () => { state.tab = id; state.settingsOpen = false; renderContent(); };
-      nav.appendChild(b);
-    });
-    return nav;
-  }
-
-  // ---- Ventas tab ----
-  function buildVentasTab(){
-    const wrap = document.createElement("div");
-    if(state.formOpen === "venta"){
-      wrap.appendChild(buildVentaForm());
-    } else {
-      const btn = document.createElement("button");
-      btn.className = "btn-add";
-      btn.style.background = "var(--green)";
-      btn.innerHTML = "+ Añadir venta";
-      btn.onclick = () => { state.formOpen = "venta"; renderContent(); };
-      wrap.appendChild(btn);
-    }
-    const list = filteredVentas();
-    if(list.length===0){
-      const e = document.createElement("div");
-      e.className = "empty";
-      e.textContent = "Todavía no hay ventas en esta campaña.";
-      wrap.appendChild(e);
-    } else {
-      list.forEach(v => wrap.appendChild(buildVentaRow(v)));
-    }
-    return wrap;
-  }
-
-  function buildVentaRow(v){
-    const meta = productMeta(v.productoId);
-    const importe = v.kg * v.precioKg;
-    const row = document.createElement("div");
-    row.className = "row-card";
-    row.innerHTML = `
-      <div class="row-bar" style="background:${meta.color}"></div>
-      <div class="row-body">
-        <div class="row-top">
-          <span class="chip" style="background:${meta.color}1A;color:${meta.color};border:1px solid ${meta.color}55">${esc(v.productoLabel)}</span>
-          <span class="row-date">${v.fecha}</span>
-        </div>
-        <div class="row-mid">${v.kg} kg × ${eur(v.precioKg)}/kg ${v.comprador?`<span style="color:var(--muted)">· ${esc(v.comprador)}</span>`:""}</div>
-        ${v.notas ? `<div class="row-notes">${esc(v.notas)}</div>` : ""}
-        <div class="row-bottom">
-          <span class="row-pay">${esc(v.formaPago)}</span>
-          <span class="row-amount" style="color:var(--green)">${eur(importe)}</span>
-        </div>
-      </div>
-      <button class="del-btn" data-id="${v.id}">🗑</button>
-    `;
-    row.querySelector(".del-btn").onclick = () => deleteVenta(v.id);
-    return row;
-  }
-
-  function buildVentaForm(){
-    const box = document.createElement("div");
-    box.className = "card";
-    const defDate = (state.showAll ? todayISO() : (todayISO().slice(0,4)===String(state.year) ? todayISO() : state.year+"-01-01"));
-    box.innerHTML = `
-      <div class="form-head">
-        <div class="form-title" style="color:var(--green)">Nueva venta</div>
-        <button class="x-btn" id="close-form">✕</button>
-      </div>
-      <div class="grid2">
-        <div class="field"><span class="field-label">Fecha</span><input type="date" id="f-fecha" value="${defDate}"></div>
-        <div class="field"><span class="field-label">Forma de pago</span>
-          <select id="f-pago">${PAYMENTS.map(p=>`<option value="${p}">${p}</option>`).join("")}</select>
-        </div>
-      </div>
-      <div class="field">
-        <span class="field-label">Producto</span>
-        <div class="chip-select" id="f-productos">
-          ${PRODUCTS.map(p=>`<div class="chip-opt" data-id="${p.id}">${p.label}</div>`).join("")}
-        </div>
-        <div id="f-producto-custom-wrap" style="display:none;margin-top:8px">
-          <input id="f-producto-custom" placeholder="Nombre del producto">
-        </div>
-      </div>
-      <div class="grid2">
-        <div class="field"><span class="field-label">Kg vendidos</span><input type="number" inputmode="decimal" id="f-kg" placeholder="0"></div>
-        <div class="field"><span class="field-label">Precio €/kg</span><input type="number" inputmode="decimal" step="0.01" id="f-precio" placeholder="0.00"></div>
-      </div>
-      <div class="field"><span class="field-label">Comprador / destino</span><input id="f-comprador" placeholder="Ej: Axarchumbo, Ranea…"></div>
-      <div class="field"><span class="field-label">Notas</span><input id="f-notas" placeholder="Opcional"></div>
-      <div class="importe-preview"><span class="lbl">Importe</span><span class="val" id="f-importe">${eur(0)}</span></div>
-      <button class="save-btn" id="f-save" style="background:var(--green)" disabled>Guardar venta</button>
-    `;
-
-    let productoId = "mango_tommy";
-    const chips = box.querySelectorAll("#f-productos .chip-opt");
-    function paintChips(){
-      chips.forEach(c=>{
-        const p = productMeta(c.dataset.id);
-        if(c.dataset.id===productoId){ c.style.background=p.color; c.style.borderColor=p.color; c.style.color="#fff"; }
-        else { c.style.background="#fff"; c.style.borderColor="#DDD5C7"; c.style.color="var(--ink2)"; }
-      });
-      box.querySelector("#f-producto-custom-wrap").style.display = productoId==="otro" ? "block" : "none";
-    }
-    chips.forEach(c=> c.onclick = () => { productoId = c.dataset.id; paintChips(); validate(); });
-    paintChips();
-
-    const kgEl = box.querySelector("#f-kg"), precioEl = box.querySelector("#f-precio");
-    const importeEl = box.querySelector("#f-importe");
-    const saveBtn = box.querySelector("#f-save");
-    const fechaEl = box.querySelector("#f-fecha");
-    const customEl = box.querySelector("#f-producto-custom");
-
-    function validate(){
-      const kg = Number(kgEl.value)||0, precio = Number(precioEl.value)||0;
-      importeEl.textContent = eur(kg*precio);
-      const prodOk = productoId!=="otro" || (customEl.value && customEl.value.trim());
-      saveBtn.disabled = !(fechaEl.value && prodOk && kg>0 && precio>=0);
-    }
-    [kgEl, precioEl, fechaEl, customEl].forEach(el => el.addEventListener("input", validate));
-    validate();
-
-    box.querySelector("#close-form").onclick = () => { state.formOpen = null; renderContent(); };
-    saveBtn.onclick = () => {
-      const kg = Number(kgEl.value), precio = Number(precioEl.value);
-      addVenta({
-        id: uid(),
-        fecha: fechaEl.value,
-        productoId,
-        productoLabel: productoId==="otro" ? customEl.value.trim() : productMeta(productoId).label,
-        kg, precioKg: precio,
-        comprador: box.querySelector("#f-comprador").value.trim(),
-        formaPago: box.querySelector("#f-pago").value,
-        notas: box.querySelector("#f-notas").value.trim()
-      });
-    };
-    return box;
-  }
-
-  // ---- Gastos tab ----
-  function buildGastosTab(){
-    const wrap = document.createElement("div");
-    if(state.formOpen === "gasto"){
-      wrap.appendChild(buildGastoForm());
-    } else {
-      const btn = document.createElement("button");
-      btn.className = "btn-add";
-      btn.style.background = "var(--clay)";
-      btn.innerHTML = "+ Añadir gasto";
-      btn.onclick = () => { state.formOpen = "gasto"; renderContent(); };
-      wrap.appendChild(btn);
-    }
-    const list = filteredGastos();
-    if(list.length===0){
-      const e = document.createElement("div");
-      e.className = "empty";
-      e.textContent = "Todavía no hay gastos en esta campaña.";
-      wrap.appendChild(e);
-    } else {
-      list.forEach(g => wrap.appendChild(buildGastoRow(g)));
-    }
-    return wrap;
-  }
-
-  function buildGastoRow(g){
-    const meta = catMeta(g.categoriaId);
-    const row = document.createElement("div");
-    row.className = "row-card";
-    row.innerHTML = `
-      <div class="row-bar" style="background:${meta.color}"></div>
-      <div class="row-body">
-        <div class="row-top">
-          <span class="chip" style="background:${meta.color}1A;color:${meta.color};border:1px solid ${meta.color}55">${meta.icon} ${meta.label}</span>
-          <span class="row-date">${g.fecha}</span>
-        </div>
-        ${g.descripcion ? `<div class="row-mid">${esc(g.descripcion)}</div>` : ""}
-        <div class="row-bottom" style="justify-content:flex-end">
-          <span class="row-amount" style="color:var(--clay)">${eur(g.importe)}</span>
-        </div>
-      </div>
-      <button class="del-btn" data-id="${g.id}">🗑</button>
-    `;
-    row.querySelector(".del-btn").onclick = () => deleteGasto(g.id);
-    return row;
-  }
-
-  function buildGastoForm(){
-    const box = document.createElement("div");
-    box.className = "card";
-    const defDate = (state.showAll ? todayISO() : (todayISO().slice(0,4)===String(state.year) ? todayISO() : state.year+"-01-01"));
-    box.innerHTML = `
-      <div class="form-head">
-        <div class="form-title" style="color:var(--clay)">Nuevo gasto</div>
-        <button class="x-btn" id="close-form">✕</button>
-      </div>
-      <div class="field"><span class="field-label">Fecha</span><input type="date" id="f-fecha" value="${defDate}"></div>
-      <div class="field">
-        <span class="field-label">Categoría</span>
-        <div class="cat-grid" id="f-cats">
-          ${CATEGORIES.map(c=>`<div class="cat-opt" data-id="${c.id}">${c.icon} ${c.label}</div>`).join("")}
-        </div>
-      </div>
-      <div class="field"><span class="field-label">Importe (€)</span><input type="number" inputmode="decimal" step="0.01" id="f-importe-in" placeholder="0.00"></div>
-      <div class="field"><span class="field-label">Descripción</span><input id="f-desc" placeholder="Opcional"></div>
-      <button class="save-btn" id="f-save" style="background:var(--clay)" disabled>Guardar gasto</button>
-    `;
-
-    let categoriaId = "combustible";
-    const opts = box.querySelectorAll("#f-cats .cat-opt");
-    function paint(){
-      opts.forEach(o=>{
-        const c = catMeta(o.dataset.id);
-        if(o.dataset.id===categoriaId){ o.style.background=c.color; o.style.borderColor=c.color; o.style.color="#fff"; }
-        else { o.style.background="#fff"; o.style.borderColor="#DDD5C7"; o.style.color="var(--ink2)"; }
-      });
-    }
-    opts.forEach(o=> o.onclick = () => { categoriaId = o.dataset.id; paint(); validate(); });
-    paint();
-
-    const fechaEl = box.querySelector("#f-fecha");
-    const importeEl = box.querySelector("#f-importe-in");
-    const saveBtn = box.querySelector("#f-save");
-    function validate(){ saveBtn.disabled = !(fechaEl.value && categoriaId && Number(importeEl.value)>0); }
-    [fechaEl, importeEl].forEach(el=> el.addEventListener("input", validate));
-    validate();
-
-    box.querySelector("#close-form").onclick = () => { state.formOpen = null; renderContent(); };
-    saveBtn.onclick = () => {
-      addGasto({
-        id: uid(),
-        fecha: fechaEl.value,
-        categoriaId,
-        importe: Number(importeEl.value),
-        descripcion: box.querySelector("#f-desc").value.trim()
-      });
-    };
-    return box;
-  }
-
-  // ---- Resumen tab ----
-  function buildResumenTab(){
-    const wrap = document.createElement("div");
-    const ventas = filteredVentas(), gastos = filteredGastos();
-    const totalVentas = ventas.reduce((s,v)=> s+v.kg*v.precioKg, 0);
-    const totalGastos = gastos.reduce((s,g)=> s+g.importe, 0);
-    const neto = totalVentas - totalGastos;
-
-    const grid = document.createElement("div");
-    grid.className = "summary-grid";
-    grid.innerHTML = `
-      <div class="sum-box" style="background:var(--green-bg)"><div class="k" style="color:var(--green)">▲ VENTAS</div><div class="v" style="color:var(--green)">${eur(totalVentas)}</div></div>
-      <div class="sum-box" style="background:var(--clay-bg)"><div class="k" style="color:var(--clay)">▼ GASTOS</div><div class="v" style="color:var(--clay)">${eur(totalGastos)}</div></div>
-      <div class="sum-box" style="background:${neto>=0?"var(--green-bg)":"var(--clay-bg)"}"><div class="k" style="color:${neto>=0?"var(--green)":"var(--clay)"}">NETO</div><div class="v" style="color:${neto>=0?"var(--green)":"var(--clay)"}">${eur(neto)}</div></div>
-    `;
-    wrap.appendChild(grid);
-
-    // por producto
-    const prodMap = {};
-    ventas.forEach(v=>{
-      const key = v.productoLabel;
-      if(!prodMap[key]) prodMap[key] = {kg:0, importe:0, color: productMeta(v.productoId).color};
-      prodMap[key].kg += v.kg;
-      prodMap[key].importe += v.kg*v.precioKg;
-    });
-    const prodEntries = Object.entries(prodMap).sort((a,b)=> b[1].importe - a[1].importe);
-    const maxProd = Math.max(1, ...prodEntries.map(([,v])=>v.importe));
-
-    const prodCard = document.createElement("div");
-    prodCard.className = "card";
-    prodCard.innerHTML = `<div class="section-label">POR PRODUCTO</div>`;
-    if(prodEntries.length===0){
-      prodCard.innerHTML += `<div class="empty" style="padding:10px 0">Sin ventas registradas.</div>`;
-    } else {
-      prodEntries.forEach(([label,v])=>{
-        const item = document.createElement("div");
-        item.className = "breakdown-item";
-        item.innerHTML = `
-          <div class="breakdown-top">
-            <span style="font-weight:700;color:var(--ink2)">${esc(label)} <span style="color:var(--muted);font-weight:400">(${v.kg} kg)</span></span>
-            <span style="font-weight:800;color:${v.color}">${eur(v.importe)}</span>
-          </div>
-          <div class="bar-track"><div class="bar-fill" style="width:${(v.importe/maxProd)*100}%;background:${v.color}"></div></div>
-        `;
-        prodCard.appendChild(item);
-      });
-    }
-    wrap.appendChild(prodCard);
-
-    // por categoria
-    const catMap = {};
-    gastos.forEach(g=>{
-      const meta = catMeta(g.categoriaId);
-      if(!catMap[meta.label]) catMap[meta.label] = {importe:0, color: meta.color};
-      catMap[meta.label].importe += g.importe;
-    });
-    const catEntries = Object.entries(catMap).sort((a,b)=> b[1].importe - a[1].importe);
-    const maxCat = Math.max(1, ...catEntries.map(([,v])=>v.importe));
-
-    const catCard = document.createElement("div");
-    catCard.className = "card";
-    catCard.style.marginTop = "16px";
-    catCard.innerHTML = `<div class="section-label">POR CATEGORÍA DE GASTO</div>`;
-    if(catEntries.length===0){
-      catCard.innerHTML += `<div class="empty" style="padding:10px 0">Sin gastos registrados.</div>`;
-    } else {
-      catEntries.forEach(([label,v])=>{
-        const item = document.createElement("div");
-        item.className = "breakdown-item";
-        item.innerHTML = `
-          <div class="breakdown-top">
-            <span style="font-weight:700;color:var(--ink2)">${esc(label)}</span>
-            <span style="font-weight:800;color:${v.color}">${eur(v.importe)}</span>
-          </div>
-          <div class="bar-track"><div class="bar-fill" style="width:${(v.importe/maxCat)*100}%;background:${v.color}"></div></div>
-        `;
-        catCard.appendChild(item);
-      });
-    }
-    wrap.appendChild(catCard);
-
-    return wrap;
-  }
-
-  // ---- Settings ----
-  function buildSettings(){
-    const wrap = document.createElement("div");
-    const connected = !!state.driveToken;
-    const statusCard = document.createElement("div");
-    statusCard.className = "drive-status";
-    statusCard.style.background = connected ? "var(--green-bg)" : "var(--clay-bg)";
-    statusCard.style.color = connected ? "var(--green)" : "var(--clay)";
-    statusCard.innerHTML = `
-      <div class="dot" style="background:${connected?"var(--green)":"var(--clay)"}"></div>
-      ${connected ? "Conectado a Google Drive" : "No conectado a Google Drive"}
-    `;
-    wrap.appendChild(statusCard);
-
-    const card = document.createElement("div");
-    card.className = "card";
-    card.innerHTML = `
-      <div class="section-label">SINCRONIZACIÓN CON GOOGLE DRIVE</div>
-      <div class="help-text">Pega aquí el "ID de cliente" que creaste en Google Cloud Console. Se guarda solo en este navegador.</div>
-      <div class="field"><span class="field-label">ID de cliente de Google</span>
-        <input id="s-client-id" placeholder="xxxxx.apps.googleusercontent.com" value="${esc(state.clientId)}">
-      </div>
-      <div class="settings-row">
-        <button class="settings-btn primary" id="s-save-id">Guardar ID de cliente</button>
-        ${connected
-          ? `<button class="settings-btn" id="s-sync-now">Sincronizar ahora</button>
-             <button class="settings-btn" id="s-load-drive">Cargar copia desde Drive</button>
-             <button class="settings-btn danger" id="s-disconnect">Desconectar de Drive</button>`
-          : `<button class="settings-btn primary" id="s-connect" style="background:#4285F4">Conectar con Google Drive</button>`
-        }
-      </div>
-      ${state.driveLastSync ? `<div class="help-text">Última sincronización: ${new Date(state.driveLastSync).toLocaleString("es-ES")}</div>` : ""}
-    `;
-    wrap.appendChild(card);
-
-    card.querySelector("#s-save-id").onclick = () => {
-      const val = card.querySelector("#s-client-id").value.trim();
-      state.clientId = val;
-      localStorage.setItem("rc_client_id", val);
-      tokenClient = null;
-      state.error = "";
-      renderContent();
-    };
-    const connectBtn = card.querySelector("#s-connect");
-    if(connectBtn) connectBtn.onclick = connectDrive;
-    const syncBtn = card.querySelector("#s-sync-now");
-    if(syncBtn) syncBtn.onclick = syncToDrive;
-    const loadBtn = card.querySelector("#s-load-drive");
-    if(loadBtn) loadBtn.onclick = loadFromDriveManual;
-    const discBtn = card.querySelector("#s-disconnect");
-    if(discBtn) discBtn.onclick = disconnectDrive;
-
-    const help = document.createElement("div");
-    help.className = "card";
-    help.style.marginTop = "16px";
-    help.innerHTML = `
-      <div class="section-label">CÓMO CONFIGURAR (una sola vez)</div>
-      <div class="help-text">
-        1. Entra en <a href="https://console.cloud.google.com/" target="_blank">console.cloud.google.com</a> y crea un proyecto nuevo.<br>
-        2. Ve a "API y servicios" → "Pantalla de consentimiento OAuth", tipo Externo, añade tu email como usuario de prueba.<br>
-        3. Ve a "API y servicios" → "Credenciales" → "Crear credenciales" → "ID de cliente de OAuth" → tipo "Aplicación web".<br>
-        4. En "Orígenes autorizados de JavaScript" añade la dirección web donde subas este archivo (ej: tu página de GitHub Pages).<br>
-        5. Copia el ID de cliente que te da Google y pégalo aquí arriba.<br>
-        6. También activa la "Google Drive API" en "Biblioteca de API".
-      </div>
-    `;
-    wrap.appendChild(help);
-
-    const back = document.createElement("button");
-    back.className = "settings-btn";
-    back.style.marginTop = "16px";
-    back.textContent = "← Volver a la app";
-    back.onclick = () => { state.settingsOpen = false; renderContent(); };
-    wrap.appendChild(back);
-
-    return wrap;
-  }
-
-  // ---------------- Init ----------------
-  window.addEventListener("load", () => {
-    renderAll();
-    // give GIS script a moment to load then init if we have a stored client id
-    setTimeout(() => { if(state.clientId) initTokenClient(); }, 400);
-  });
-})();
-</script>
-</body>
-</html>
+  ]
+}
