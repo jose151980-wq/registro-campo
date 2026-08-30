@@ -775,6 +775,33 @@
     return {addedV, addedG};
   }
 
+  function dedupeData(){
+    const seenV = new Set();
+    const cleanVentas = [];
+    let removedV = 0;
+    state.ventas.forEach(v => {
+      const key = [v.fecha, v.productoId, v.productoLabel, v.kg, v.precioKg, v.importeManual, v.comprador, v.importe].join("|");
+      if(seenV.has(key)){ removedV++; return; }
+      seenV.add(key);
+      cleanVentas.push(v);
+    });
+    const seenG = new Set();
+    const cleanGastos = [];
+    let removedG = 0;
+    state.gastos.forEach(g => {
+      const key = [g.fecha, g.categoriaId, g.importe, g.descripcion].join("|");
+      if(seenG.has(key)){ removedG++; return; }
+      seenG.add(key);
+      cleanGastos.push(g);
+    });
+    state.ventas = cleanVentas;
+    state.gastos = cleanGastos;
+    saveLocal();
+    renderAll();
+    scheduleSync();
+    return {removedV, removedG};
+  }
+
   // ---- Settings ----
   function buildSettings(){
     const wrap = document.createElement("div");
@@ -873,6 +900,22 @@
       reader.readAsText(file);
     };
     wrap.appendChild(importCard);
+
+    const dedupeCard = document.createElement("div");
+    dedupeCard.className = "card";
+    dedupeCard.style.marginTop = "16px";
+    dedupeCard.innerHTML = `
+      <div class="section-label">QUITAR DUPLICADOS</div>
+      <div class="help-text">Si importaste el mismo archivo más de una vez y ves filas repetidas, pulsa aquí para eliminar las copias exactas (se queda solo una de cada).</div>
+      <button class="settings-btn danger" id="dedupe-btn">Quitar duplicados ahora</button>
+      <div id="dedupe-result" class="help-text" style="margin-top:8px"></div>
+    `;
+    dedupeCard.querySelector("#dedupe-btn").onclick = () => {
+      const {removedV, removedG} = dedupeData();
+      const res = document.getElementById("dedupe-result");
+      if(res) res.textContent = `Eliminados: ${removedV} ventas y ${removedG} gastos duplicados.`;
+    };
+    wrap.appendChild(dedupeCard);
 
     const back = document.createElement("button");
     back.className = "settings-btn";
