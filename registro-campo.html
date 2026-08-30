@@ -407,9 +407,9 @@
       </button>
     `;
     h.querySelector("#gear-btn").onclick = () => { state.settingsOpen = !state.settingsOpen; renderContent(); };
-    h.querySelector("#year-prev").onclick = () => { state.year = Math.max(START_YEAR, state.year-1); renderContent(); };
-    h.querySelector("#year-next").onclick = () => { state.year = Math.min(CURRENT_YEAR+1, state.year+1); renderContent(); };
-    h.querySelector("#hist-toggle").onclick = () => { state.showAll = !state.showAll; renderContent(); };
+    h.querySelector("#year-prev").onclick = () => { state.year = Math.max(START_YEAR, state.year-1); renderAll(); };
+    h.querySelector("#year-next").onclick = () => { state.year = Math.min(CURRENT_YEAR+1, state.year+1); renderAll(); };
+    h.querySelector("#hist-toggle").onclick = () => { state.showAll = !state.showAll; renderAll(); };
     return h;
   }
 
