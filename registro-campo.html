@@ -156,6 +156,7 @@
 
   // ---------------- Google Drive ----------------
   let tokenClient = null;
+  let pendingDriveAction = null; // null | 'load' | 'sync'
 
   function initTokenClient(){
     if(!window.google || !state.clientId) return;
@@ -167,12 +168,17 @@
         state.driveToken = resp.access_token;
         state.error = "";
         renderAll();
-        await afterDriveConnected();
+        const action = pendingDriveAction;
+        pendingDriveAction = null;
+        if(action === "load") await doLoadFromDrive();
+        else if(action === "sync") await syncToDrive();
+        else await afterDriveConnected();
       }
     });
   }
 
-  function connectDrive(){
+  function connectDrive(action){
+    pendingDriveAction = action || null;
     if(!state.clientId){
       state.error = "Primero pega tu ID de cliente de Google en Ajustes.";
       renderAll();
@@ -291,8 +297,7 @@
     renderAll();
   }
 
-  async function loadFromDriveManual(){
-    if(!state.driveToken){ connectDrive(); return; }
+  async function doLoadFromDrive(){
     try{
       if(!state.driveFileId){
         const existing = await driveFindFile();
@@ -310,6 +315,11 @@
       state.error = "No se pudo cargar la copia de Drive.";
       renderSettingsIfOpen();
     }
+  }
+
+  async function loadFromDriveManual(){
+    if(!state.driveToken){ connectDrive("load"); return; }
+    await doLoadFromDrive();
   }
 
   // ---------------- Mutations ----------------
@@ -846,9 +856,9 @@
       renderContent();
     };
     const connectBtn = card.querySelector("#s-connect");
-    if(connectBtn) connectBtn.onclick = connectDrive;
+    if(connectBtn) connectBtn.onclick = () => connectDrive();
     const syncBtn = card.querySelector("#s-sync-now");
-    if(syncBtn) syncBtn.onclick = syncToDrive;
+    if(syncBtn) syncBtn.onclick = () => { if(!state.driveToken){ connectDrive("sync"); } else { syncToDrive(); } };
     const loadBtn = card.querySelector("#s-load-drive");
     if(loadBtn) loadBtn.onclick = loadFromDriveManual;
     const discBtn = card.querySelector("#s-disconnect");
