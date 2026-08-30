@@ -672,6 +672,11 @@
     const totalGastos = gastos.reduce((s,g)=> s+g.importe, 0);
     const neto = totalVentas - totalGastos;
 
+    const periodLabel = document.createElement("div");
+    periodLabel.style.cssText = "text-align:center;font-size:12px;font-weight:800;color:var(--muted);letter-spacing:.04em;margin-bottom:10px;text-transform:uppercase;";
+    periodLabel.textContent = state.showAll ? "Histórico completo (2020–hoy)" : `Campaña ${state.year}`;
+    wrap.appendChild(periodLabel);
+
     const grid = document.createElement("div");
     grid.className = "summary-grid";
     grid.innerHTML = `
